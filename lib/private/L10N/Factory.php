@@ -59,9 +59,7 @@ class Factory implements IFactory {
 	];
 
 	public const RTL_LANGUAGES = [
-		'ae', 'ar', 'arc', 'arz', 'bcc', 'bqi', 'ckb', 'dv', 'fa', 'glk',
-		'ha', 'he', 'khw', 'ks', 'ku', 'mzn', 'nqo', 'pnb', 'ps', 'sd', 'ug',
-		'ur', 'uzs', 'yi',
+		'ar', 'dv', 'fa', 'ha', 'he', 'ks', 'ku', 'ps', 'sd', 'ug', 'ur_PK', 'uz', 'yi',
 	];
 
 	private ICache $cache;
