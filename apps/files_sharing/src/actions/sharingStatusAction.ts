@@ -21,7 +21,7 @@
  */
 import { Node, View, registerFileAction, FileAction, Permission } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
-import { Type } from '@nextcloud/sharing'
+import { ShareType } from '@nextcloud/sharing'
 
 import AccountGroupSvg from '@mdi/svg/svg/account-group.svg?raw'
 import AccountPlusSvg from '@mdi/svg/svg/account-plus.svg?raw'
@@ -29,22 +29,10 @@ import LinkSvg from '@mdi/svg/svg/link.svg?raw'
 import CircleSvg from '../../../../core/img/apps/circles.svg?raw'
 
 import { action as sidebarAction } from '../../../files/src/actions/sidebarAction'
-import { generateUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
+import { generateAvatarSvg } from '../utils/AccountIcon.ts'
 
 import './sharingStatusAction.scss'
-
-const isDarkMode = window?.matchMedia?.('(prefers-color-scheme: dark)')?.matches === true
-	|| document.querySelector('[data-themes*=dark]') !== null
-
-const generateAvatarSvg = (userId: string, isGuest = false) => {
-	const url = isDarkMode ? '/avatar/{userId}/32/dark' : '/avatar/{userId}/32'
-	const avatarUrl = generateUrl(isGuest ? url : url + '?guestFallback=true', { userId })
-	return `<svg width="32" height="32" viewBox="0 0 32 32"
-		xmlns="http://www.w3.org/2000/svg" class="sharing-status__avatar">
-		<image href="${avatarUrl}" height="32" width="32" />
-	</svg>`
-}
 
 const isExternal = (node: Node) => {
 	return node.attributes.remote_id !== undefined
@@ -84,6 +72,7 @@ export const action = new FileAction({
 
 	iconSvgInline(nodes: Node[]) {
 		const node = nodes[0]
+		console.debug("Node check", node)
 		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat() as number[]
 
 		// Mixed share types
@@ -92,19 +81,20 @@ export const action = new FileAction({
 		}
 
 		// Link shares
-		if (shareTypes.includes(Type.SHARE_TYPE_LINK)
-			|| shareTypes.includes(Type.SHARE_TYPE_EMAIL)) {
+		if (shareTypes.includes(ShareType.Link)
+			|| shareTypes.includes(ShareType.Email)) {
 			return LinkSvg
 		}
 
 		// Group shares
-		if (shareTypes.includes(Type.SHARE_TYPE_GROUP)
-			|| shareTypes.includes(Type.SHARE_TYPE_REMOTE_GROUP)) {
+		if (shareTypes.includes(ShareType.Grup)
+			|| shareTypes.includes(ShareType.RemoteGroup)) {
 			return AccountGroupSvg
 		}
 
 		// Circle shares
-		if (shareTypes.includes(Type.SHARE_TYPE_CIRCLE)) {
+		if (shareTypes.includes(ShareType.Team)) {
+			// Circles was renamed to Teams
 			return CircleSvg
 		}
 
