@@ -15,7 +15,7 @@ use OCP\User\Backend\IGetHomeBackend;
  * but not properly removed from Nextcloud (e.g. an exception occurred).
  * This backend is only needed because some APIs in user-deleted-events require a "real" user with backend.
  */
-class FailedUsersBackend extends Backend implements IGetHomeBackend, IUserBackend {
+class PartiallyDeletedUsersBackend extends Backend implements IGetHomeBackend, IUserBackend {
 
 	public function __construct(
 		private IConfig $config,
@@ -41,6 +41,16 @@ class FailedUsersBackend extends Backend implements IGetHomeBackend, IUserBacken
 
 	public function getUsers($search = '', $limit = null, $offset = null) {
 		return $this->config->getUsersForUserValue('core', 'deleted', 'true');
+	}
+
+	/**
+	 * Unmark a user as deleted.
+	 * This typically the case if the user deletion failed in the backend but before the backend deleted the user,
+	 * meaning the user still exists so we unmark them as it still can be accessed (and deleted) normally.
+	 */
+	public function unmarkUser(string $userId): void {
+		$this->config->deleteUserValue($userId, 'core', 'deleted');
+		$this->config->deleteUserValue($userId, 'core', 'deleted.backup-home');
 	}
 
 }
