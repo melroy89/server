@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace OCA\DAV\Command;
 
 use OCA\DAV\CalDAV\CalDavBackend;
-use OCP\IDBConnection;
 use OCP\IUserManager;
 use Sabre\DAV\Xml\Property\Href;
 use Symfony\Component\Console\Command\Command;
@@ -21,7 +20,6 @@ class CreateSubscription extends Command {
 	public function __construct(
 		protected IUserManager $userManager,
 		private CalDavBackend $caldav,
-		protected IDBConnection $dbConnection,
 	) {
 		parent::__construct();
 	}
