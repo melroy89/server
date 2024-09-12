@@ -8,18 +8,9 @@ declare(strict_types=1);
  */
 namespace OCA\DAV\Command;
 
-use OC\KnownUser\KnownUserService;
 use OCA\DAV\CalDAV\CalDavBackend;
-use OCA\DAV\CalDAV\Proxy\ProxyMapper;
-use OCA\DAV\CalDAV\Sharing\Backend;
-use OCA\DAV\Connector\Sabre\Principal;
-use OCP\Accounts\IAccountManager;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\IConfig;
 use OCP\IDBConnection;
-use OCP\IGroupManager;
 use OCP\IUserManager;
-use Psr\Log\LoggerInterface;
 use Sabre\DAV\Xml\Property\Href;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +20,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CreateSubscription extends Command {
 	public function __construct(
 		protected IUserManager $userManager,
-		private IGroupManager $groupManager,
+		private CalDavBackend $caldav,
 		protected IDBConnection $dbConnection,
 	) {
 		parent::__construct();
@@ -63,35 +54,7 @@ class CreateSubscription extends Command {
 		$name = $input->getArgument('name');
 		$url = $input->getArgument('url');
 		$color = $input->getArgument('color') ?? '#0082c9';
-
-		$principalBackend = new Principal(
-			$this->userManager,
-			$this->groupManager,
-			\OC::$server->get(IAccountManager::class),
-			\OC::$server->getShareManager(),
-			\OC::$server->getUserSession(),
-			\OC::$server->getAppManager(),
-			\OC::$server->query(ProxyMapper::class),
-			\OC::$server->get(KnownUserService::class),
-			\OC::$server->getConfig(),
-			\OC::$server->getL10NFactory(),
-		);
-		$random = \OC::$server->getSecureRandom();
-		$logger = \OC::$server->get(LoggerInterface::class);
-		$dispatcher = \OC::$server->get(IEventDispatcher::class);
-		$config = \OC::$server->get(IConfig::class);
-		$caldav = new CalDavBackend(
-			$this->dbConnection,
-			$principalBackend,
-			$this->userManager,
-			$random,
-			$logger,
-			$dispatcher,
-			$config,
-			\OC::$server->get(Backend::class),
-		);
-
-		$subscriptions = $caldav->getSubscriptionsForUser("principals/users/$user");
+		$subscriptions = $this->caldav->getSubscriptionsForUser("principals/users/$user");
 
 		$exists = array_filter($subscriptions, function ($row) use ($url) {
 			return $row['source'] === $url;
@@ -108,7 +71,7 @@ class CreateSubscription extends Command {
 			'{http://apple.com/ns/ical/}calendar-color' => $color,
 			'{http://calendarserver.org/ns/}source' => $urlProperty,
 		];
-		$caldav->createSubscription("principals/users/$user", $name, $properties);
+		$this->caldav->createSubscription("principals/users/$user", $name, $properties);
 		return self::SUCCESS;
 	}
 
