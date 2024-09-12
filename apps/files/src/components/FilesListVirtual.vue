@@ -65,6 +65,7 @@ import type { UserConfig } from '../types'
 import { getFileListHeaders, Folder, View, getFileActions, FileType } from '@nextcloud/files'
 import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { defineComponent } from 'vue'
 
 import { action as sidebarAction } from '../actions/sidebarAction.ts'
@@ -200,7 +201,7 @@ export default defineComponent({
 			handler() {
 				// wait for scrolling and updating the actions to settle
 				this.$nextTick(() => {
-					if (this.fileId && this.openFile) {
+					if (this.fileId) {
 						this.handleOpenFile(this.fileId)
 					}
 				})
@@ -214,6 +215,8 @@ export default defineComponent({
 		const mainContent = window.document.querySelector('main.app-content') as HTMLElement
 		mainContent.addEventListener('dragover', this.onDragOver)
 
+		subscribe('files:sidebar:closed', this.handleSideBarCloseEvent)
+
 		// If the file list is mounted with a fileId specified
 		// then we need to open the sidebar initially
 		if (this.fileId) {
@@ -224,6 +227,8 @@ export default defineComponent({
 	beforeDestroy() {
 		const mainContent = window.document.querySelector('main.app-content') as HTMLElement
 		mainContent.removeEventListener('dragover', this.onDragOver)
+
+		unsubscribe('files:sidebar:closed', this.handleSideBarCloseEvent)
 	},
 
 	methods: {
@@ -251,12 +256,31 @@ export default defineComponent({
 			}
 		},
 
+		handleSideBarCloseEvent() {
+			if (!this.openFile) {
+				window.OCP.Files.Router.goToRoute(
+					null,
+					{ ...this.$route.params, fileid: undefined },
+					this.$route.query,
+				)
+			}
+		},
+
 		/**
 		 * Handle opening a file (e.g. by ?openfile=true)
 		 * @param fileId File to open
 		 */
 		handleOpenFile(fileId: number|null) {
 			if (!this.openFile) {
+				// If the Sidebar is closed and if openFile is false, remove the file id from the URL
+				if (OCA.Files.Sidebar.file === '') {
+					window.OCP.Files.Router.goToRoute(
+						null,
+						{ ...this.$route.params, fileid: undefined },
+						this.$route.query,
+					)
+				}
+
 				return
 			}
 
