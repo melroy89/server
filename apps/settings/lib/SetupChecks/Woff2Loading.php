@@ -12,6 +12,7 @@ use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
+use OCP\SetupCheck\CheckServerResponseTrait;
 use OCP\SetupCheck\ISetupCheck;
 use OCP\SetupCheck\SetupResult;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,7 @@ class Woff2Loading implements ISetupCheck {
 	public function run(): SetupResult {
 		$url = $this->urlGenerator->linkTo('', 'core/fonts/NotoSans-Regular-latin.woff2');
 		$noResponse = true;
-		$responses = $this->runHEAD($url);
+		$responses = $this->runRequest('HEAD', $url);
 		foreach ($responses as $response) {
 			$noResponse = false;
 			if ($response->getStatusCode() === 200) {
