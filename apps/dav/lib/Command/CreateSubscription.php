@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\DAV\Command;
 
 use OCA\DAV\CalDAV\CalDavBackend;
+use OCA\Theming\ThemingDefaults;
 use OCP\IUserManager;
 use Sabre\DAV\Xml\Property\Href;
 use Symfony\Component\Console\Command\Command;
@@ -20,6 +21,7 @@ class CreateSubscription extends Command {
 	public function __construct(
 		protected IUserManager $userManager,
 		private CalDavBackend $caldav,
+		private ThemingDefaults $themingDefaults,
 	) {
 		parent::__construct();
 	}
@@ -51,7 +53,7 @@ class CreateSubscription extends Command {
 
 		$name = $input->getArgument('name');
 		$url = $input->getArgument('url');
-		$color = $input->getArgument('color') ?? '#0082c9';
+		$color = $input->getArgument('color') ?? $this->themingDefaults->getColorPrimary();
 		$subscriptions = $this->caldav->getSubscriptionsForUser("principals/users/$user");
 
 		$exists = array_filter($subscriptions, function ($row) use ($url) {
